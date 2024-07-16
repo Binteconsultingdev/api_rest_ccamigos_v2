@@ -53,7 +53,7 @@ module.exports = {
           id_instrumento,
           // ruta_pago
         };
-
+        console.log(client);
         response = await createRecord(client, table, connection);
         if(response[0]){
           response = await uploadPay(req.files, response[2], connection)
