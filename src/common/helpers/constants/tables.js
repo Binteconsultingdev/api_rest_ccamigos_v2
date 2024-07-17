@@ -9,6 +9,9 @@ module.exports = {
     ClientesRegistros: {
       name: "ClientesRegistros",
     },
+    Eventos: {
+      name: "Eventos",
+    },
     Songs: {
       name: "Songs",
     },
