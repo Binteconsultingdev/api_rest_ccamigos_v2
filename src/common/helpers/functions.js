@@ -112,6 +112,25 @@ module.exports = {
     });
   },
 
+  readPay: async (table, id_cliente, connection) => {
+    return new Promise(function (resolve, reject) {
+      const query = `SELECT * FROM ${table} WHERE id = ${id_cliente}`;
+      console.log(query);
+      connection.query(query, [id_cliente], async (error, results) => {
+        if (error) {
+          console.log(error);
+          resolve([false, errors.errorDataBase, 0]);
+        } else {
+          if (results.length > 0) {
+            resolve([true, success.successGet, results[0]]);
+          } else {
+            resolve([false, errors.errorNotFound, 0]);
+          }
+        }
+      });
+    });
+  },
+
   readAllRecord: async (query, connection) => {
     return new Promise(function (resolve, reject) {
       connection.query(query, async (error, results) => {
@@ -131,8 +150,45 @@ module.exports = {
 
   updateRecord: async (object, table, id, connection) => {
     return new Promise(function (resolve, reject) {
+      // UPDATE `ccamigos_congreso-musicos`.`ClientesRegistros` SET `id_pago` = '3' WHERE (`id` = '27');
       const query = `UPDATE  ${table} SET ? WHERE id = ${id}`;
       connection.query(query, [object], async (error, results) => {
+        if (error) {
+          console.log(error);
+          resolve([false, errors.errorDataBase, 0]);
+        } else {
+          if (results.affectedRows > 0) {
+            resolve([true, success.successUpdate, id]);
+          } else {
+            resolve([false, errors.errorUpdate, 0]);
+          }
+        }
+      });
+    });
+  },
+  updatePay: async (object, table, id_cliente, connection) => {
+    return new Promise(function (resolve, reject) {
+      // UPDATE ClientesRegistros SET pago = ${staus} WHERE id = ${id_cliente}
+      const query = `UPDATE ${table} SET id_pago = ${object} WHERE id = ${id_cliente}`;
+      // const { pago } = object
+      connection.query(query, [object.pago, id_cliente], async (error, results) => {
+        if (error) {
+          console.log(error);
+          resolve([false, errors.errorDataBase, 0]);
+        } else {
+          if (results.affectedRows > 0) {
+            resolve([true, success.successUpdate, id_cliente]);
+          } else {
+            resolve([false, errors.errorUpdate, 0]);
+          }
+        }
+      });
+    });
+  },
+  updateEventFunction: async (object, table, id, connection) => {
+    return new Promise(function (resolve, reject) {
+      const query = `UPDATE ${table} SET ? WHERE id_evento = ?`;
+      connection.query(query, [object, id], async (error, results) => {
         if (error) {
           console.log(error);
           resolve([false, errors.errorDataBase, 0]);

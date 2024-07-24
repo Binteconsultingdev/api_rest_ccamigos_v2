@@ -12,6 +12,9 @@ module.exports = {
     Eventos: {
       name: "Eventos",
     },
+    Users: {
+      name: "Users",
+    },
     Songs: {
       name: "Songs",
     },

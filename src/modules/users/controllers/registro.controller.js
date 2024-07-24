@@ -10,7 +10,9 @@ const {
   getCurrentDate,
   readRecord,
   updateRecord,
-  uploadFile
+  uploadFile,
+  updatePay,
+  readPay,
 } = require("../../../common/helpers/functions");
 const tables = require("../../../common/helpers/constants/tables");
 const { response } = require("express");
@@ -21,8 +23,8 @@ const table = tables.tables.ClientesRegistros.name;
 module.exports = {
   addClient: async (req, res) => {
     try {
-      const { nombre, edad, iglesia, email, telefono, id_instrumento } = req.body;
-      console.log(nombre, edad, iglesia, email, telefono, id_instrumento);
+      const { nombre, edad, iglesia, email, telefono, id_instrumento, id_evento } = req.body;
+      console.log(nombre, edad, iglesia, email, telefono, id_instrumento, id_evento);
       let response = 0;
       let responseAux = 0;
 
@@ -51,6 +53,7 @@ module.exports = {
           email, 
           telefono, 
           id_instrumento,
+          id_evento,
           // ruta_pago
         };
         console.log(client);
@@ -263,6 +266,63 @@ module.exports = {
         }
         
         console.log(response);
+        connection.release();
+        myConnection.end();
+
+        return res.status(response[1].code).json({
+          ok: response[0],
+          message: response[1].message,
+          data: response[2],
+        });
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(errors.errorServer.code).json({
+        ok: false,
+        message: errors.errorServer.message,
+      });
+    }
+  },
+
+  changeStatusPay: async (req, res) => {
+    const { id_cliente } = req.params;
+    const { id_pago } = req.body
+    let pago = 0 
+    let response
+    
+    try {
+      console.log( id_cliente, id_pago );
+
+      const myConnection = pool.connection(constants.DATABASE);
+      myConnection.getConnection(async function (err, connection) {
+        if (err) {
+          console.log(err);
+          return res.status(errors.errorConnection.code).json({
+            ok: false,
+            message: errors.errorConnection.message,
+          });
+        }  
+
+        response = await readPay(table, id_cliente, connection)
+        console.log(response);
+        
+        if (response[0] && response[2]) {
+          console.log(id_pago);
+          // Determina el nuevo estado
+          if (id_pago === 1) {
+            pago = 1;
+          } else if (id_pago === 2) {
+            pago = 2;
+          } else if (id_pago === 3) {
+            pago = 3;
+          }
+
+          // Actualiza el estado
+          response = await updatePay( pago , table, id_cliente, connection);
+          console.log(response);
+        }
+
+
         connection.release();
         myConnection.end();
 
