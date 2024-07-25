@@ -23,12 +23,12 @@ const table = tables.tables.ClientesRegistros.name;
 module.exports = {
   addClient: async (req, res) => {
     try {
-      const { nombre, edad, iglesia, email, telefono, id_instrumento, id_evento } = req.body;
-      console.log(nombre, edad, iglesia, email, telefono, id_instrumento, id_evento);
+      const { nombre, edad, iglesia, email, telefono, id_instrumento, id_evento, id_evento_url } = req.body;
+      console.log(nombre, edad, iglesia, email, telefono, id_instrumento, id_evento, id_evento_url);
       let response = 0;
       let responseAux = 0;
 
-      console.log(req.files['file'])
+      // console.log(req.files['file'])
 
       const myConnection = pool.connection(constants.DATABASE);
       myConnection.getConnection(async function (err, connection) {
@@ -53,6 +53,7 @@ module.exports = {
           email, 
           telefono, 
           id_instrumento,
+          id_evento_url,
           id_evento,
           // ruta_pago
         };
@@ -99,7 +100,7 @@ module.exports = {
           });
         }
         response = await readAllRecord(
-            'SELECT * FROM `ccamigos_congreso-musicos`.ClientesRegistros JOIN Cat_instrumentos ON ClientesRegistros.id_instrumento = Cat_instrumentos.id ',
+            `SELECT ${table}.*, Cat_instrumentos.instrumento as instrumento FROM ${table} JOIN Cat_instrumentos ON ClientesRegistros.id_instrumento = Cat_instrumentos.id WHERE ClientesRegistros.estatus = 0`,
             connection
         );
 

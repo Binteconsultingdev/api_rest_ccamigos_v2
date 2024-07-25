@@ -120,11 +120,11 @@ module.exports = {
           }
         } else {
           console.log("SIN ARCHIVOS");
-          resolve([true, success.successUpdate, id_user]);
+          resolve([true, success.successUpdate, 0]);
         }
       } catch (error) {
         console.log(error);
-        resolve([false, errors.errorUploadFile, id_user]);
+        resolve([false, errors.errorUploadFile, 0]);
       }
     });
   },

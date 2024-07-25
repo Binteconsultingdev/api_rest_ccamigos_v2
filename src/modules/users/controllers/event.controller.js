@@ -237,7 +237,7 @@ module.exports = {
         const { url_pagina_link } = req.body;
         console.log( url_pagina_link );
         
-        console.log(req.body);
+        // console.log(req.body);
         let response = 0;
 
         const myConnection = pool.connection(constants.DATABASE);
@@ -251,9 +251,17 @@ module.exports = {
             }
         response = await readAllRecord(
             // `SELECT * FROM ${table} WHERE Eventos.url_pagina_link = '${url_pagina_link}'`,
-            `SELECT * FROM ${table} WHERE Eventos.url_test = '${url_pagina_link}'`,
+            `SELECT * FROM ${table} WHERE Eventos.url_pagina_link = '${url_pagina_link}'`,
             connection
         );
+        if(response[0]){
+          let i = 0
+          while(i < response[2].length){
+            const campos = await readAllRecord(`SELECT * FROM Events_Campos WHERE id_event = ${response[2][i].id}`, connection)
+            response[2][i].campos = campos[2]
+            i++
+          }
+        }
 
         console.log(response);
 
@@ -263,7 +271,7 @@ module.exports = {
         return res.status(response[1].code).json({
           ok: response[0],
           message: response[1].message,
-          data: response[2],
+          data: response[2][0],
         });
       });
     } catch (error) {
