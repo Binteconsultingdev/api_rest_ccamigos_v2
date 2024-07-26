@@ -19,4 +19,5 @@ const generateJWT = (id_user) => {
 
 module.exports = {
   generateJWT,
+  
 };
