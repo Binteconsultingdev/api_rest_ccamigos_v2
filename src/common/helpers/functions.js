@@ -116,7 +116,7 @@ module.exports = {
     return new Promise(function (resolve, reject) {
       const query = `SELECT * FROM ${table} WHERE id = ${id_cliente}`;
       console.log(query);
-      connection.query(query, [id_cliente], async (error, results) => {
+      connection.query(query, [table, id_cliente], (error, results) => {
         if (error) {
           console.log(error);
           resolve([false, errors.errorDataBase, 0]);
@@ -166,12 +166,12 @@ module.exports = {
       });
     });
   },
-  updatePay: async (object, table, id_cliente, connection) => {
+  updatePay: async (pago, table, id_cliente, connection) => {
     return new Promise(function (resolve, reject) {
       // UPDATE ClientesRegistros SET pago = ${staus} WHERE id = ${id_cliente}
-      const query = `UPDATE ${table} SET id_pago = ${object} WHERE id = ${id_cliente}`;
+      const query = `UPDATE ${table} SET id_pago = ${pago} WHERE id = ${id_cliente}`;
       // const { pago } = object
-      connection.query(query, [object.pago, id_cliente], async (error, results) => {
+      connection.query(query, [table, pago, id_cliente], (error, results) => {
         if (error) {
           console.log(error);
           resolve([false, errors.errorDataBase, 0]);
