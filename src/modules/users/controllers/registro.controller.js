@@ -38,14 +38,6 @@ module.exports = {
             message: errors.errorConnection.message,
           });
         }
-
-        // response = await readAllRecord(
-        //     `SELECT *  FROM ClientesRegistros WHERE email = '${email}'`,
-        //     connection
-        // );
-
-        // if (!!req.body.length) {
-        //   console.log(response);
         const client = {
           nombre, 
           edad, 
@@ -123,6 +115,7 @@ module.exports = {
       });
     }
   },
+
   getInstrument: async (req, res) => {
     try {
       let response = 0;
@@ -171,15 +164,6 @@ module.exports = {
       nuevoPassword = await bcrypt.hash(password, salt);
     }
 
-    // Query SQL para actualizar el usuario
-    // const sql = `
-    //   UPDATE Users
-    //   SET 
-    //   username = ${} 
-    //   email = ${}
-    //   WHERE id = ${}
-    // `;
-
     // Ejecutar la consulta SQL
     const [result] = await db.execute(sql, [nuevoNombre, nuevoEmail, usuarioId]);
     
@@ -195,7 +179,8 @@ module.exports = {
     console.error('Error al actualizar usuario:', error.message);
     throw error;
   }
-},
+  },
+
   updateUser: async (req, res) => {
     try {
       let { nombre, edad, iglesia, email, telefono, instrumento } = req.body;
@@ -237,7 +222,6 @@ module.exports = {
       });
     }
   },
-
 
   changeStatusClient: async (req, res) => {
     try {
@@ -284,63 +268,6 @@ module.exports = {
       });
     }
   },
-
-//   changeStatusPay: async (req, res) => {
-//     const { id_cliente } = req.params;
-//     const { id_pago } = req.body
-//     let pago = 0 
-//     let response
-//     
-//     try {
-//       console.log( id_cliente, id_pago );
-// 
-//       const myConnection = pool.connection(constants.DATABASE);
-//       myConnection.getConnection(async function (err, connection) {
-//         if (err) {
-//           console.log(err);
-//           return res.status(errors.errorConnection.code).json({
-//             ok: false,
-//             message: errors.errorConnection.message,
-//           });
-//         }  
-// 
-//         response = await readPay(table, id_cliente, connection)
-//         console.log(response);
-//         
-//         if (response[0] && response[2]) {
-//           console.log(id_pago);
-//           // Determina el nuevo estado
-//           if (id_pago === 1) {
-//             pago = 1;
-//           } else if (id_pago === 2) {
-//             pago = 2;
-//           } else if (id_pago === 3) {
-//             pago = 3;
-//           }
-// 
-//           // Actualiza el estado
-//           response = await updatePay( pago , table, id_cliente, connection);
-//           console.log(response);
-//         }
-// 
-// 
-//         connection.release();
-//         myConnection.end();
-// 
-//         return res.status(response[1].code).json({
-//           ok: response[0],
-//           message: response[1].message,
-//           data: response[2],
-//         });
-//       });
-//     } catch (error) {
-//       console.log(error);
-//       return res.status(errors.errorServer.code).json({
-//         ok: false,
-//         message: errors.errorServer.message,
-//       });
-//     }
-//   },
 
   changeStatusPayForAll: async (req, res) => {
     const { ids } = req.body;  // IDs a actualizar
@@ -457,5 +384,64 @@ module.exports = {
             message: errors.errorServer.message,
         });
     }
-  }
+  },
+
+  changeStatusPay: async (req, res) => {
+    const { id_cliente } = req.params;
+    const { id_pago } = req.body
+    let pago = 0 
+    let response
+    
+    try {
+      console.log( id_cliente, id_pago );
+
+      const myConnection = pool.connection(constants.DATABASE);
+      myConnection.getConnection(async function (err, connection) {
+        if (err) {
+          console.log(err);
+          return res.status(errors.errorConnection.code).json({
+            ok: false,
+            message: errors.errorConnection.message,
+          });
+        }  
+
+        response = await readPay(table, id_cliente, connection)
+        console.log(response);
+        
+        if (response[0] && response[2]) {
+          console.log(id_pago);
+          // Determina el nuevo estado
+          if (id_pago === 1) {
+            pago = 1;
+          } else if (id_pago === 2) {
+            pago = 2;
+          } else if (id_pago === 3) {
+            pago = 3;
+          }
+
+          // Actualiza el estado
+          response = await updatePay( pago , table, id_cliente, connection);
+          console.log(response);
+        }
+
+
+        connection.release();
+        myConnection.end();
+
+        return res.status(response[1].code).json({
+          ok: response[0],
+          message: response[1].message,
+          data: response[2],
+        });
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(errors.errorServer.code).json({
+        ok: false,
+        message: errors.errorServer.message,
+      });
+    }
+  },
+
+
 };

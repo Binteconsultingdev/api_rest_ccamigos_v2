@@ -5,7 +5,7 @@ const {
     changeStatusClient,
     getInstrument,
     getClients,
-    // changeStatusPay,
+    changeStatusPay,
     changeStatusPayForAll,
     changeStatusForAll
 } = require("../controllers/registro.controller.js");
@@ -16,7 +16,7 @@ router.get("/", getClients);
 router.post("/client", addClient); // crear registro
 router.get("/instrument", getInstrument)  // Obtener instrumento
 router.put("/estatus/:id_cliente", changeStatusClient);
-// router.put("/estatus/pay/:id_cliente", changeStatusPay);
+router.put("/estatus/pay/:id_cliente", changeStatusPay);
 router.put("/estatus/pay/all", changeStatusPayForAll);
 router.put("/estatus/delete/all", changeStatusForAll);
 module.exports = router;
