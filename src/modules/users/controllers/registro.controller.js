@@ -13,6 +13,8 @@ const {
   uploadFile,
   updatePay,
   readPay,
+  readPayAll,
+  updatePayAll,
 } = require("../../../common/helpers/functions");
 const tables = require("../../../common/helpers/constants/tables");
 const { response } = require("express");
@@ -223,6 +225,7 @@ module.exports = {
     }
   },
 
+  // * Estatus Eliminado o Activo
   changeStatusClient: async (req, res) => {
     try {
       const { id_cliente } = req.params;
@@ -268,65 +271,8 @@ module.exports = {
       });
     }
   },
-
-  changeStatusPayForAll: async (req, res) => {
-    const { ids } = req.body;  // IDs a actualizar
-    console.log(ids);
-
-    const id_pago = 2;   // Estatus de pago = PAGADO
-    let response;
-    
-    try {
-        const myConnection = pool.connection(constants.DATABASE);
-        myConnection.getConnection(async function (err, connection) {
-            if (err) {
-                console.log(err);
-                return res.status(errors.errorConnection.code).json({
-                    ok: false,
-                    message: errors.errorConnection.message,
-                });
-            }
-
-            try {
-              const updatePromises = ids.map(async (id) => {
-                const response = await readPay(table, id, connection);
-                if (response[0]) {
-                    return await updatePay(id_pago, table, id, connection);
-                }
-                return [false, errors.errorNotFound, id];
-              });
-
-              const results = await Promise.all(updatePromises);
-
-              connection.release();
-              myConnection.end();
-
-              return res.status(200).json({
-                  ok: true,
-                  message: 'Estatus actualizado correctamente para todos los IDs',
-                  results: results,
-                });
-              } catch (updateError) {
-                console.log(updateError);
-                connection.release();
-                myConnection.end();
-
-                res.status(errors.errorServer.code).json({
-                    ok: false,
-                    message: errors.errorServer.message,
-                });
-              }
-            });
-    } catch (error) {
-        console.log(error);
-        return res.status(errors.errorServer.code).json({
-            ok: false,
-            message: errors.errorServer.message,
-        });
-    }
-  },
-
-  changeStatusForAll: async (req, res) => {
+  
+  changeStatusClientForAll: async (req, res) => {
     const { ids } = req.body;  // IDs a actualizar
     let estatus = 0
     let response = 0 
@@ -386,6 +332,7 @@ module.exports = {
     }
   },
 
+  //  * Estatus Pago
   changeStatusPay: async (req, res) => {
     const { id_cliente } = req.params;
     const { id_pago } = req.body
@@ -442,6 +389,67 @@ module.exports = {
       });
     }
   },
+
+  changeStatusPayForAll: async (req, res) => {
+    const { ids } = req.body;  // IDs a actualizar
+    console.log(ids);
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({
+          ok: false,
+          message: 'No se proporcionaron IDs válidos',
+      });
+    }
+
+    try {
+        const myConnection = pool.connection(constants.DATABASE);
+        myConnection.getConnection(async function (err, connection) {
+            if (err) {
+                console.log(err);
+                return res.status(errors.errorConnection.code).json({
+                    ok: false,
+                    message: errors.errorConnection.message,
+                });
+            }
+
+            try {
+              const updatePromises = ids.map(async (id) => {
+                const response = await readPayAll(table, id, connection);
+                if (response[0]) {
+                    return await updatePayAll(2, table, id, connection);
+                }
+                return [false, errors.errorNotFound, id];
+              });
+
+              const results = await Promise.all(updatePromises);
+
+              connection.release();
+              return res.status(200).json({
+                ok: true,
+                message: 'Estatus actualizado correctamente para todos los IDs',
+                results: results,
+              });
+
+              } catch (updateError) {
+                console.log(updateError);
+                connection.release();
+                myConnection.end();
+
+                res.status(errors.errorServer.code).json({
+                    ok: false,
+                    message: errors.errorServer.message,
+                });
+              }
+            });
+    } catch (error) {
+        console.log(error);
+        return res.status(errors.errorServer.code).json({
+            ok: false,
+            message: errors.errorServer.message,
+        });
+    }
+  },
+
 
 
 };

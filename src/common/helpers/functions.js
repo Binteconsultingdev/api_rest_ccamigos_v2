@@ -131,6 +131,25 @@ module.exports = {
     });
   },
 
+  readPayAll: async (table, id_cliente, connection) => {
+    return new Promise(function (resolve, reject) {
+      const query = `SELECT * FROM ${table} WHERE id = ${id_cliente}`;
+      console.log(query);
+      connection.query(query, [table, id_cliente], (error, results) => {
+        if (error) {
+          console.log(error);
+          resolve([false, errors.errorDataBase, 0]);
+        } else {
+          if (results.length > 0) {
+            resolve([true, success.successGet, results[0]]);
+          } else {
+            resolve([false, errors.errorNotFound, 0]);
+          }
+        }
+      });
+    });
+  },
+
   readAllRecord: async (query, connection) => {
     return new Promise(function (resolve, reject) {
       connection.query(query, async (error, results) => {
@@ -167,6 +186,26 @@ module.exports = {
     });
   },
   updatePay: async (pago, table, id_cliente, connection) => {
+    return new Promise(function (resolve, reject) {
+      // UPDATE ClientesRegistros SET pago = ${staus} WHERE id = ${id_cliente}
+      const query = `UPDATE ${table} SET id_pago = ${pago} WHERE id = ${id_cliente}`;
+      // const { pago } = object
+      connection.query(query, [table, pago, id_cliente], (error, results) => {
+        if (error) {
+          console.log(error);
+          resolve([false, errors.errorDataBase, 0]);
+        } else {
+          if (results.affectedRows > 0) {
+            resolve([true, success.successUpdate, id_cliente]);
+          } else {
+            resolve([false, errors.errorUpdate, 0]);
+          }
+        }
+      });
+    });
+  },
+
+  updatePayAll: async (pago, table, id_cliente, connection) => {
     return new Promise(function (resolve, reject) {
       // UPDATE ClientesRegistros SET pago = ${staus} WHERE id = ${id_cliente}
       const query = `UPDATE ${table} SET id_pago = ${pago} WHERE id = ${id_cliente}`;
