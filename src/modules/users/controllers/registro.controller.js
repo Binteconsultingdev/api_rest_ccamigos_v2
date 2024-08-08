@@ -83,7 +83,10 @@ module.exports = {
   getClients: async (req, res) => {
     try {
       let response = 0;
+      let query = ''
+      // let { id_proyect } = req.params
 
+      let id_user = req.id_user
       const myConnection = pool.connection(constants.DATABASE);
       myConnection.getConnection(async function (err, connection) {
         if (err) {
@@ -93,9 +96,20 @@ module.exports = {
             message: errors.errorConnection.message,
           });
         }
+
+        const user = await readRecord(tables.tables.Users.name, id_user, connection)
+        console.log(user);
+        if(user[2].id_rol === 1){
+          query = `SELECT ${table}.*, Cat_instrumentos.instrumento as instrumento FROM ${table} JOIN Cat_instrumentos ON ClientesRegistros.id_instrumento = Cat_instrumentos.id WHERE ClientesRegistros.estatus = 0 `
+        } else {
+          query = `SELECT ${table}.*, Cat_instrumentos.instrumento as instrumento FROM ${table} JOIN Cat_instrumentos ON ClientesRegistros.id_instrumento = Cat_instrumentos.id WHERE ClientesRegistros.estatus = 0 and ClientesRegistros.id_proyect = ${user[2].id_proyect}`
+          console.log(query)
+
+        }
+
         response = await readAllRecord(
-            `SELECT ${table}.*, Cat_instrumentos.instrumento as instrumento FROM ${table} JOIN Cat_instrumentos ON ClientesRegistros.id_instrumento = Cat_instrumentos.id WHERE ClientesRegistros.estatus = 0`,
-            connection
+          query,
+          connection
         );
 
         console.log(response);

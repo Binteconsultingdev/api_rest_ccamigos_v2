@@ -6,7 +6,8 @@ const {
     getEvents,
     updateEvent,
     getLandingById,
-    getLandingByUrl
+    getLandingByUrl,
+    getEventos
 } = require("../controllers/event.controller.js");
 const { validateJWT } = require("../../../common/middlewares/validate-jwt.js");
 
@@ -14,6 +15,7 @@ const router = Router();
 
 
 router.get("/", getEvents);
+router.get("/all", getEventos);
 router.post("/", addEvent); // crear evento
 router.put("/:id", updateEvent); // actualizar evento
 router.get("/event", getEvent)  // Obtener Evento

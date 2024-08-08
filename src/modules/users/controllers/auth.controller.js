@@ -6,7 +6,7 @@ const {
   success,
 } = require("../../../common/helpers/constants/messages");
 const constants = require("../../../common/helpers/constants/constants");
-const { readAllRecord, permissionAny, createRecord, } = require("../../../common/helpers/functions");
+const { readAllRecord, permissionAny, createRecord, isRoot, } = require("../../../common/helpers/functions");
 const tables = require("../../../common/helpers/constants/tables");
 const { validatePassword } = require("../common/functions");
 
@@ -62,14 +62,17 @@ module.exports = {
       });
     }
   },
+  
   register: async (req, res) => {
     try {
-      const { name, email, password } = req.body;
-      console.log(name, email, password);
-      let response = 0;
-      let responseAux = 0;
-      let id_rol = 3
+      const { name, email, password, id_proyect } = req.body;
+      let id_user = req.id_user
 
+      console.log(name, email, password, id_user);
+
+      let response = 0;
+
+      // const connection = await pool.getConnection();
       const myConnection = pool.connection(constants.DATABASE);
       myConnection.getConnection(async function (err, connection) {
         if (err) {
@@ -79,29 +82,46 @@ module.exports = {
           });
         }
 
-        response = await readAllRecord(
-          `SELECT *  FROM Users WHERE email = '${email}'`,
-          connection
-        );
+        response = await isRoot(id_user, connection)
 
-        if (response[2].length == 0) {
-          const salt = bcrypt.genSaltSync();
-          const user = {
-            name,
-            email,
-            password,
-            id_rol
-          };
-          user.password = bcrypt.hashSync(password, salt);
-          response = await createRecord(user, table, connection);
+        if(response[0]){
+          // Verificar si el usuario ya existe
+          response = await readAllRecord(
+            `SELECT * FROM Users WHERE email = ${email}`,
+            myConnection,
+            [email]
+          );
 
-        } else {
-          response[1] = errors.errorRecordAlredyExists;
+          if (response[2].length === 0) {
+            // El usuario no existe, proceder con el registro
+            const salt = bcrypt.genSaltSync();
+            const hashedPassword = bcrypt.hashSync(password, salt);
+      
+            // Si el usuario es admin, se permite especificar el id_proyecto, de lo contrario se usa el id_proyecto del usuario actual
+            const user = {
+              name,
+              email,
+              password: hashedPassword,
+              id_rol: 2,
+              id_proyect
+            };
+    
+            response = await createRecord(user, 'Users', connection);
+    
+    
+          } else {
+            // El usuario ya existe
+            return res.status(400).json({
+              ok: false,
+              message: 'El correo electrónico ya está registrado'
+            });
+          }
         }
 
         connection.release();
         myConnection.end();
-
+        
+        console.log(response);
         return res.status(response[1].code).json({
           ok: response[0],
           message: response[1].message,

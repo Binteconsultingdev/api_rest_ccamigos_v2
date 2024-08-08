@@ -62,6 +62,34 @@ module.exports = {
     });
   },
 
+  // Función para verificar si el usuario es admin
+  isRoot: async (userId, connection) => {
+    return new Promise((resolve, reject) => {
+      connection.query(`SELECT id_rol FROM Users WHERE id = ${userId} and id_rol = 1`, [userId], (error, results) => {
+        if (error) {
+          console.log(error);
+          resolve([false, errors.errorDataBase, 0]);
+        } else {
+          if (results.length > 0) {
+            resolve([true, success.successCreate, results]);
+          } else {
+            resolve([false, errors.errorPermision, 0]);
+          }
+        }
+      });
+    });
+  },
+
+  // Función para obtener todos los proyectos
+  getAllProjects: async (connection) => {
+    return new Promise((resolve, reject) => {
+      connection.query('SELECT id FROM Projects', (err, results) => {
+        if (err) return reject(err);
+        resolve(results);
+      });
+    });
+  },
+
   createRecord: async (object, table, connection) => {
     return new Promise(function (resolve, reject) {
       const query = `INSERT INTO ${table} SET ?`;

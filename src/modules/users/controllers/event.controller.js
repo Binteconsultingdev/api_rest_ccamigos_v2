@@ -153,6 +153,52 @@ module.exports = {
     }
   },
 
+  getEventos: async (req, res) => {
+    try {
+      const myConnection = pool.connection(constants.DATABASE);
+      myConnection.getConnection(async function (err, connection) {
+        if (err) {
+          console.log(err);
+          return res.status(errors.errorConnection.code).json({
+            ok: false,
+            message: errors.errorConnection.message,
+          });
+        }
+  
+        try {
+          const response = await readAllRecord(
+            'SELECT id, nombre_proyecto FROM `ccamigos_congreso-musicos`.Cat_Projects',
+            connection
+          );
+  
+          connection.release();
+          myConnection.end();
+  
+          return res.status(200).json({
+            ok: true,
+            message: 'Eventos obtenidos correctamente',
+            data: response[2],
+          });
+        } catch (queryError) {
+          console.log(queryError);
+          connection.release();
+          myConnection.end();
+
+          return res.status(errors.errorServer.code).json({
+            ok: false,
+            message: errors.errorServer.message,
+          });
+        }
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(errors.errorServer.code).json({
+        ok: false,
+        message: errors.errorServer.message,
+      });
+    }
+  },
+
   getEventsById: async (req, res) => {
     try {
       let response = 0;
