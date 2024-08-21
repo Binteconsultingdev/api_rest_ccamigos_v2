@@ -12,7 +12,7 @@ const {
 const { validateJWT } = require("../../../common/middlewares/validate-jwt.js");
 
 const router = Router();
-
+router.use(fileUpload());
 
 router.get("/", getEvents);
 router.get("/all", getEventos);

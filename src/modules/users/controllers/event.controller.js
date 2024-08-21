@@ -11,18 +11,19 @@ const {
 } = require("../../../common/helpers/functions");
 const tables = require("../../../common/helpers/constants/tables");
 const { response } = require("express");
-const { uploadPay } = require("../common/functions");
+const { uploadBaner } = require("../common/functions");
 
 const table = tables.tables.Eventos.name;
 
 module.exports = {
   addEvent: async (req, res) => {
     try {
-      const { nombre_evento, fecha_evento, url_pagina_link, color, informacion_evento, baner, lugar_fecha_evento } = req.body;
-      console.log(nombre_evento, fecha_evento,  url_pagina_link, color, informacion_evento, baner, lugar_fecha_evento);
-        // fecha_evento = 2024-08-22
+      const { nombre_evento, fecha_evento, url_pagina_link, color, informacion_evento, lugar_fecha_evento, id_project } = req.body;
+      const files = req.files;
+      console.log(req);
+      console.log(nombre_evento, fecha_evento, url_pagina_link, color, informacion_evento, lugar_fecha_evento, id_project, files);
+      
       let response = 0;
-      let responseAux = 0;
 
       const myConnection = pool.connection(constants.DATABASE);
       myConnection.getConnection(async function (err, connection) {
@@ -32,24 +33,37 @@ module.exports = {
             message: errors.errorConnection.message,
           });
         }
+        
+        // Verificar si files está vacío o no definido
+        if (!files || Object.keys(files).length === 0) {
+          return res.status(400).json({
+            ok: false,
+            message: 'Error al subir la imagen',
+          });
+        }
 
+        // Crear el objeto con todos los datos, incluyendo id_project
         const evento = {
             nombre_evento, 
             fecha_evento, 
             url_pagina_link, 
             color, 
             informacion_evento, 
-            baner, 
-            lugar_fecha_evento
+            lugar_fecha_evento,
+            id_project  // Asegúrate de que id_project esté presente
         };
 
         console.log(evento);
+        // Crear el registro en la base de datos
         response = await createRecord(evento, table, connection);
-        
+        // Si se creó el registro correctamente, proceder a subir el banner
+        if(response[0]){
+          response = await uploadBaner(req.files, response[2], connection);
+        }
 
         connection.release();
         myConnection.end();
-        
+
         console.log(response);
         return res.status(response[1].code).json({
           ok: response[0],
@@ -65,6 +79,7 @@ module.exports = {
       });
     }
   },
+
 
   updateEvent: async (req, res) => {
     try {

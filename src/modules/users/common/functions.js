@@ -129,6 +129,50 @@ module.exports = {
     });
   },
 
+  uploadBaner: async (files, id_event, connection) => {
+    console.log(id_event);
+    console.log(files)
+    return new Promise(async function (resolve, reject) {
+      try {
+        let baner = '';
+        let response = 0;
+        if (files != null) {
+          if (files["files"]) {
+            console.log(files);
+            response = await uploadFile(
+              files["files"],
+              "Eventos",
+              id_event,
+              `https://nyc3.digitaloceanspaces.com/sgp-web/${constants.SERVER_FILES}/`,
+              `baner-${id_event}`
+            );
+            console.log('Respuesta de uploadFile:', response);
+            if (response[0]) {
+              baner = response[2];
+            }
+          }
+          response = await updateRecord(
+            { baner },
+            tables.tables.Eventos.name,
+            id_event,
+            connection
+          );
+          if (response[0]) {
+            resolve([true, success.successCreate, id_event]);
+          } else {
+            resolve([false, errors.errorUploadFile, id_event]);
+          }
+        } else {
+          console.log("SIN ARCHIVOS");
+          resolve([true, success.successUpdate, 0]);
+        }
+      } catch (error) {
+        console.log(error);
+        resolve([false, errors.errorUploadFile, 0]);
+      }
+    });
+  },
+
   uploadPhotoUser: async (files, id_user, id_organization, connection) => {
     return new Promise(async function (resolve, reject) {
       try {
