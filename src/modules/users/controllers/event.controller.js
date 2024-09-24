@@ -18,10 +18,36 @@ const table = tables.tables.Eventos.name;
 module.exports = {
   addEvent: async (req, res) => {
     try {
-      const { nombre_evento, fecha_evento, url_pagina_link, color, informacion_evento, lugar_fecha_evento, id_project } = req.body;
+      const { 
+        nombre_evento, 
+        fecha_evento, 
+        url_pagina_link, 
+        color, 
+        informacion_evento, 
+        lugar_fecha_evento, 
+        id_project, 
+        campos 
+      } = req.body;      
       const files = req.files;
-      console.log(req);
-      console.log(nombre_evento, fecha_evento, url_pagina_link, color, informacion_evento, lugar_fecha_evento, id_project, files);
+      
+      console.log(nombre_evento, fecha_evento, url_pagina_link, color, informacion_evento, lugar_fecha_evento, id_project, campos, files);
+
+      if (!files || Object.keys(files).length === 0) {
+        return res.status(400).json({
+          ok: false,
+          message: 'Error al subir la imagen',
+        });
+      }
+
+      const evento = {
+        nombre_evento, 
+        fecha_evento, 
+        url_pagina_link, 
+        color, 
+        informacion_evento, 
+        lugar_fecha_evento,
+        id_project
+      };
       
       let response = 0;
 
@@ -33,43 +59,61 @@ module.exports = {
             message: errors.errorConnection.message,
           });
         }
-        
-        // Verificar si files está vacío o no definido
-        if (!files || Object.keys(files).length === 0) {
-          return res.status(400).json({
+
+        try {
+          // Crear el registro del evento en la base de datos
+          response = await createRecord(evento, table, connection);
+  
+          // Verificar si el evento fue creado correctamente
+          if (response[0]) {
+            const id_evento = response[2]; // Suponiendo que response[2] es el id del evento creado
+            
+            // Subir el banner
+            await uploadBaner(req.files, id_evento, connection);
+            
+            // Parsear campos si es necesario
+            let parsedCampos = [];
+            if (typeof campos === 'string') {
+              try {
+                parsedCampos = JSON.parse(campos);
+              } catch (error) {
+                return res.status(400).json({
+                  ok: false,
+                  message: 'Formato de campos inválido',
+                });
+              }
+            } else {
+              parsedCampos = campos;
+            }
+            
+            // Procesar los campos adicionales
+            for (const campoId of parsedCampos) {
+              const campoData = {
+                id_event: id_evento, // Uso correcto del id_evento
+                id_campo: campoId, // Asumiendo que `campoId` es el ID
+              };
+
+              // Guardar el campo en la tabla Events_Campos
+              await createRecord(campoData, 'Events_Campos', connection);
+            }
+          }
+  
+          // Liberar la conexión y finalizar la conexión del pool
+          connection.release();
+          myConnection.end();
+  
+          return res.status(response[1].code).json({
+            ok: response[0],
+            message: response[1].message,
+            data: response[2],
+          });
+        } catch (error) {
+          console.log(error);
+          return res.status(errors.errorServer.code).json({
             ok: false,
-            message: 'Error al subir la imagen',
+            message: errors.errorServer.message,
           });
         }
-
-        // Crear el objeto con todos los datos, incluyendo id_project
-        const evento = {
-            nombre_evento, 
-            fecha_evento, 
-            url_pagina_link, 
-            color, 
-            informacion_evento, 
-            lugar_fecha_evento,
-            id_project  // Asegúrate de que id_project esté presente
-        };
-
-        console.log(evento);
-        // Crear el registro en la base de datos
-        response = await createRecord(evento, table, connection);
-        // Si se creó el registro correctamente, proceder a subir el banner
-        if(response[0]){
-          response = await uploadBaner(req.files, response[2], connection);
-        }
-
-        connection.release();
-        myConnection.end();
-
-        console.log(response);
-        return res.status(response[1].code).json({
-          ok: response[0],
-          message: response[1].message,
-          data: response[2],
-        });
       });
     } catch (error) {
       console.log(error);
@@ -153,6 +197,49 @@ module.exports = {
         connection.release();
         myConnection.end();
 
+        return res.status(response[1].code).json({
+          ok: response[0],
+          message: response[1].message,
+          data: response[2],
+        });
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(errors.errorServer.code).json({
+        ok: false,
+        message: errors.errorServer.message,
+      });
+    }
+  },
+
+  getCampos: async (req, res) => {
+    try {
+      let response = 0;
+  
+      // Establece la conexión con la base de datos
+      const myConnection = pool.connection(constants.DATABASE);
+      myConnection.getConnection(async function (err, connection) {
+        if (err) {
+          console.log(err);
+          return res.status(errors.errorConnection.code).json({
+            ok: false,
+            message: errors.errorConnection.message,
+          });
+        }
+        
+        // Realiza la consulta a la base de datos
+        response = await readAllRecord(
+          'SELECT id, name FROM Cat_Campos',
+          connection
+        );
+  
+        console.log(response);
+  
+        // Libera la conexión y cierra el pool
+        connection.release();
+        myConnection.end();
+  
+        // Devuelve la respuesta al cliente
         return res.status(response[1].code).json({
           ok: response[0],
           message: response[1].message,

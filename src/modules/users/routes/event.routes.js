@@ -7,7 +7,8 @@ const {
     updateEvent,
     getLandingById,
     getLandingByUrl,
-    getEventos
+    getEventos,
+    getCampos
 } = require("../controllers/event.controller.js");
 const { validateJWT } = require("../../../common/middlewares/validate-jwt.js");
 
@@ -15,6 +16,7 @@ const router = Router();
 router.use(fileUpload());
 
 router.get("/", getEvents);
+router.get("/cat_campos", getCampos); // Obtener campos
 router.get("/all", getEventos);
 router.post("/", addEvent); // crear evento
 router.put("/:id", updateEvent); // actualizar evento
