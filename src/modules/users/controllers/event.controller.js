@@ -21,36 +21,51 @@ module.exports = {
       const { 
         nombre_evento, 
         fecha_evento, 
+        fecha_evento_fin, // Fecha final del evento
         url_pagina_link, 
         color, 
         informacion_evento, 
         lugar_fecha_evento, 
         id_project, 
-        campos 
-      } = req.body;      
+        campos, 
+        talleres // Los talleres se reciben en la solicitud
+      } = req.body;
+  
       const files = req.files;
-      
-      console.log(nombre_evento, fecha_evento, url_pagina_link, color, informacion_evento, lugar_fecha_evento, id_project, campos, files);
-
+      // Parsear talleres si es necesario
+      let parsedTalleres = typeof talleres === 'string' ? JSON.parse(talleres) : talleres;
+      // Verificar si parsedTalleres es un array antes de usar join()
+      if (!Array.isArray(parsedTalleres)) {
+        return res.status(400).json({
+            message: 'El campo talleres debe ser un array.'
+        });
+      }
+  
+      // Usar join() solo en arrays
+      const talleresConcatenados = parsedTalleres.join(', ');
+      console.log(nombre_evento, fecha_evento, fecha_evento_fin, url_pagina_link, color, informacion_evento, lugar_fecha_evento, id_project, campos, talleresConcatenados, files);
+  
       if (!files || Object.keys(files).length === 0) {
         return res.status(400).json({
           ok: false,
           message: 'Error al subir la imagen',
         });
       }
-
+  
       const evento = {
         nombre_evento, 
         fecha_evento, 
+        fecha_evento_fin, // Guardar fecha final
         url_pagina_link, 
         color, 
         informacion_evento, 
         lugar_fecha_evento,
-        id_project
+        id_project,
+        talleres: talleresConcatenados
       };
-      
+  
       let response = 0;
-
+  
       const myConnection = pool.connection(constants.DATABASE);
       myConnection.getConnection(async function (err, connection) {
         if (err) {
@@ -59,7 +74,7 @@ module.exports = {
             message: errors.errorConnection.message,
           });
         }
-
+  
         try {
           // Crear el registro del evento en la base de datos
           response = await createRecord(evento, table, connection);
@@ -70,7 +85,7 @@ module.exports = {
             
             // Subir el banner
             await uploadBaner(req.files, id_evento, connection);
-            
+  
             // Parsear campos si es necesario
             let parsedCampos = [];
             if (typeof campos === 'string') {
@@ -85,14 +100,14 @@ module.exports = {
             } else {
               parsedCampos = campos;
             }
-            
+  
             // Procesar los campos adicionales
             for (const campoId of parsedCampos) {
               const campoData = {
-                id_event: id_evento, // Uso correcto del id_evento
-                id_campo: campoId, // Asumiendo que `campoId` es el ID
+                id_event: id_evento,
+                id_campo: campoId,
               };
-
+  
               // Guardar el campo en la tabla Events_Campos
               await createRecord(campoData, 'Events_Campos', connection);
             }
@@ -123,7 +138,7 @@ module.exports = {
       });
     }
   },
-
+  
 
   updateEvent: async (req, res) => {
     try {
